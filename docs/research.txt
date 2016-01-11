@@ -1,0 +1,12 @@
+DSL (above 25kHz)
+DTMF (697 -1477Hz)
+k dial tone 350Hz 440Hz ->tells us when the number is coming
+busy tone ->400Hz 0.375s on-off period
+tone dialing mechanisms
+wire->ring and tip (signal +ground) (0-50V)
+—> solution would be to use a toroid under the form of a Rogowski coil. -integrator to convert ac current to proportional voltage (because initially it is proportional to the rate of change and not the current)
+-filter (filter out everything above and below dual tones including the upstream and downstream ADSL frequency range)-> bandpass from 200Hz to 2kHz
+-gain stage (if necessary)
+-ADC (microcontroller)
+-Goertzel algorithm(digital filter)-> recognises the individual DTMF tones
+-visual output (Matlab or python ?) -> sequence of numbers Real time
