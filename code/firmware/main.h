@@ -49,4 +49,12 @@ bool waiting = false;
 int m = 0;
 char number[11];
 
+
+int determineCol(void);
+int determineRow(void);
+bool calculate_goertzel_magnitudes(void);
+void update_goertzel(long val);
+
+
+
 #endif

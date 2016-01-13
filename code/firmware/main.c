@@ -98,7 +98,7 @@ int main(void){
     while( ADC10CTL1 & ADC10BUSY ) ;
     long adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
 
-    goertzel_feedback(adcvalue);
+    update_goertzel(adcvalue);
 
     if(n >= NUM){ // If enough samples
       n=0; // Reset sample counter
@@ -110,7 +110,7 @@ int main(void){
         int col = determineCol();
         int row = determineRow();
 
-        number[m] = result;
+        number[m] = nums[row][col];
         LCDSetLocation(0,m);
         LCDWriteString(number[m]);
 
@@ -215,7 +215,7 @@ void update_goertzel(long val){
   for(i=0; i<4; i++){
     Qr[i][0] = (((long)row_coeffs[i] * (long)Qr[i][1])/256);
     Qr[i][0] -= Qr[i][2];
-    Qr[i][0] += adcvalue;
+    Qr[i][0] += val;
     Qr[i][2] = Qr[i][1];
     Qr[i][1] = Qr[i][0];
   }
@@ -224,7 +224,7 @@ void update_goertzel(long val){
   for(i=0; i<3; i++){
     Qc[i][0] = (((long)col_coeffs[i] * (long)Qc[i][1])/256);
     Qc[i][0] -= Qc[i][2];
-    Qc[i][0] += adcvalue;
+    Qc[i][0] += val;
     Qc[i][2] = Qc[i][1];
     Qc[i][1] = Qc[i][0];
   }
