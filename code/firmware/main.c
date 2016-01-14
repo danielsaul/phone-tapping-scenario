@@ -7,12 +7,20 @@
  * main.c
  *
  */
-
 #include <msp430g2553.h>
 #include <math.h>
 #include <stdbool.h>
 #include "main.h"
 #include "LCDDisplay.h"
+
+// 8kHz Loop
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer_A(void)
+{
+  flag = 1;
+  return;
+}
+
 
 int main(void){
 
@@ -20,20 +28,23 @@ int main(void){
   BCSCTL1 = CALBC1_16MHZ;
   DCOCTL = CALDCO_16MHZ;
 
+
   // P1.0 8kHz loop pulse
   P1DIR |= BIT0;
-  P1OUT |= BIT0;
+  P1OUT &= ~BIT0;
 
   // LCD Config
   LCDConfigure();
   LCDBackLight(300);
-
-  // Display configuring message
   LCDHome();
   LCDCursorOff();
   LCDBlinkOff();
-  LCDWriteString("Configuring...");
+  LCDClear();
+  // Display configuring message
+  /*LCDHome();
 
+  LCDWriteString("Configuring...");
+*/
   // ADC Config
   ADC10CTL0 = SREF_1 | ADC10SHT_0 | REFON | ADC10ON; // 1.5V ref
   ADC10CTL1 = INCH_4 | ADC10DIV_0; // ADC channel 4,
@@ -69,12 +80,12 @@ int main(void){
   }
 
   // Display waiting message
-  LCDClear();
+/*  LCDClear();
   LCDHome();
   LCDWriteString("Waiting for");
   LCDSetLocation(1,0);
   LCDWriteString("number...");
-
+*/
   // Timer A Config
   TACCTL0 |= CCIE;
   TACCR0 = 250-1;	// 8kHz (16MHz/82/8kHz)
@@ -88,15 +99,15 @@ int main(void){
     if(!flag){
       continue;
     }
-    flag = false;
+    flag = 0;
 
-    P1OUT |= BIT0; // P1.0 High - Start of 8kHz loop
 
 
     ADC10CTL0 |= ADC10SC; // Trigger ADC Conversion
     while( ADC10CTL1 & ADC10BUSY ) ;
     int adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
 
+    // Requires 3 samples of no signal before capturing next tone
     if(!newtone){
       if(adcvalue > signal_lower_threshold && adcvalue < signal_upper_threshold){
         if(cnt > reset_cnt){
@@ -105,52 +116,73 @@ int main(void){
           cnt++;
         }
       }else{
-        if(cnt > 3){
-          newtone = true;
+        if(cnt > 50){
+            newtone = true;
+            if(start){
+              if(cnt < reset_cnt){
+                newtone = false;
+              }else{
+                start = false;
+              }
+            }
         }
         cnt = 0;
       }
     }
 
-    if(!newtone){
-      continue;
-    }
+    if(newtone){
 
-    n++; // Increment sample counter
+      P1OUT |= BIT0; // P1.0 High - Start of 8kHz loop
 
-    update_goertzel(adcvalue);
+      n++; // Increment sample counter
 
-    if(n >= NUM){ // If enough samples
-      n=0; // Reset sample counter
+      update_goertzel(adcvalue);
 
-      bool aboveThreshold = calculate_goertzel_magnitudes(); // Calculate magnitudes
+      if(n >= NUM){ // If enough samples
+        n=0; // Reset sample counter
 
-      if(aboveThreshold /*&& waiting*/){ // Must be both a row and col above the threshold, and be waiting for a tone
+        char a = calculate_goertzel_magnitudes(); // Calculate magnitudes
+        //newtone = false;
+        //bla = false;
 
-        int col = determineCol();
-        int row = determineRow();
+        /*LCDClear();
+        LCDHome();
+        if(a){
+          LCDWriteString("true");
+        }else{
+          LCDWriteString("false");
+        }*/
 
-        number[m] = nums[row][col];
-        LCDSetLocation(0,m);
-        LCDWriteString(number[m]);
+        //if(a){ // Must be both a row and col above the threshold, and be waiting for a tone
 
-        m++;
-        if(m > 10){
-          m = 0;
-        }
+          int col = determineCol();
+          int row = determineRow();
+
+          char result = nums[row][col];
+          number[m] = result;
+
+          m++;
+          if(m > 10){
+            m = 0;
+            start = true;
+            LCDClear();
+            LCDHome();
+            LCDWriteString(number);
+          }
+
+          //bla = false;
+        //}
+
         newtone = false;
-        waiting = false;
-      }
 
-      if(!aboveThreshold){
-        waiting = true;
+
       }
 
     }
 
     P1OUT &= ~BIT0; // P1.0 Low - End of 8kHz loop
-
   }
+
 
 }
 
@@ -181,51 +213,60 @@ int determineRow(void){
 
 }
 
-bool calculate_goertzel_magnitudes(void){
+char calculate_goertzel_magnitudes(void){
 
-  bool aboveThreshold = true;
+  char aboveThreshold = 0;
 
   //Magnitude Rows
   for(i=0; i<4; i++){
-    Qr[i][1] = Qr[i][1]/256;
-    Qr[i][2] = Qr[i][2]/256;
+    Qr[i][1] = (Qr[i][1]);
+    Qr[i][2] = (Qr[i][2]);
 
-    long x = (long)row_coeffs[i] * (long)Qr[i][1] * (long)Qr[i][2];
-    magr[i] = (((int)Qr[i][1] * (int)Qr[i][1]) + ((int)Qr[i][2] * (int)Qr[i][2]) - x);
+    //long x = (long)row_coeffs[i] * (long)Qr[i][1] * (long)Qr[i][2];
+    magr[i] = (((int)Qr[i][1] * (int)Qr[i][1]) + ((int)Qr[i][2] * (int)Qr[i][2]) - ((long)row_coeffs[i] * (long)Qr[i][1] * (long)Qr[i][2]));
 
     Qr[i][1] = 0;
     Qr[i][2] = 0;
 
-    if(magr[i] < threshold){
-      aboveThreshold = false;
+    if(magr[i] > threshold){
+      aboveThreshold = 1;
     }
+
+    /*LCDClear();
+    LCDHome();
+    char c[16];
+    sprintf(c, "%d: %d %d", i, aboveThreshold, magr[i]);
+    LCDWriteString(c);
+    __delay_cycles(10000000);*/
   }
 
   if(!aboveThreshold){
-    return false;
+    return 0;
   }
+
+  aboveThreshold = 0;
 
   //Magnitude Cols
   for(i=0; i<3; i++){
-    Qc[i][1] = Qc[i][1]/256;
-    Qc[i][2] = Qc[i][2]/256;
+    Qc[i][1] = Qc[i][1];
+    Qc[i][2] = Qc[i][2];
 
-    long x = (long)col_coeffs[i] * (long)Qc[i][1] * (long)Qc[i][2];
-    magc[i] = (((int)Qc[i][1] * (int)Qc[i][1]) + ((int)Qc[i][2] * (int)Qc[i][2]) - x);
+    //long x = ;
+    magc[i] = (((int)Qc[i][1] * (int)Qc[i][1]) + ((int)Qc[i][2] * (int)Qc[i][2]) - ((long)col_coeffs[i] * (long)Qc[i][1] * (long)Qc[i][2]));
 
     Qc[i][1] = 0;
     Qc[i][2] = 0;
 
-    if(magc[i] < threshold){
-      aboveThreshold = false;
+    if(magc[i] > threshold){
+      aboveThreshold = 1;
     }
   }
 
   if(!aboveThreshold){
-    return false;
+    return 0;
   }
 
-  return true;
+  return 1;
 
 }
 
@@ -249,12 +290,4 @@ void update_goertzel(int val){
     Qc[i][1] = Qc[i][0];
   }
 
-}
-
-// 8kHz Loop
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void Timer_A(void)
-{
-  flag = true;
-  return;
 }
