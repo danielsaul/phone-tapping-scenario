@@ -26,6 +26,7 @@ char i = 0;
 
 volatile char flag = 0;
 
+int buf[3] = {178,178,178};
 int cnt = 0;
 static const reset_cnt = 4000; // 1 second
 static const int signal_lower_threshold = 50;

@@ -107,9 +107,15 @@ int main(void){
     while( ADC10CTL1 & ADC10BUSY ) ;
     int adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
 
+    buf[2] = buf[1];
+    buf[1] = buf[0];
+    buf[0] = adcvalue;
+    int adcavg = (buf[0]+buf[1]+buf[2])/3;
+
+
     // Requires 3 samples of no signal before capturing next tone
     if(!newtone){
-      if(adcvalue > signal_lower_threshold && adcvalue < signal_upper_threshold){
+      if(adcavg > signal_lower_threshold && adcavg < signal_upper_threshold){
         if(cnt > reset_cnt){
           m = 0;
         }else{
@@ -142,16 +148,7 @@ int main(void){
         n=0; // Reset sample counter
 
         char a = calculate_goertzel_magnitudes(); // Calculate magnitudes
-        //newtone = false;
-        //bla = false;
 
-        /*LCDClear();
-        LCDHome();
-        if(a){
-          LCDWriteString("true");
-        }else{
-          LCDWriteString("false");
-        }*/
 
         //if(a){ // Must be both a row and col above the threshold, and be waiting for a tone
 
@@ -170,11 +167,9 @@ int main(void){
             LCDWriteString(number);
           }
 
-          //bla = false;
         //}
 
         newtone = false;
-
 
       }
 
