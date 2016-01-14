@@ -26,6 +26,12 @@ char i = 0;
 
 bool flag = false;
 
+int cnt = 0;
+static const reset_cnt = 8000; // 1 second
+static const int signal_lower_threshold = 100;
+static const int signal_upper_threshold = 156;
+bool newtone = true;
+
 int n = 0;
 static const int NUM = 125;
 
@@ -53,7 +59,7 @@ char number[11];
 int determineCol(void);
 int determineRow(void);
 bool calculate_goertzel_magnitudes(void);
-void update_goertzel(long val);
+void update_goertzel(int val);
 
 
 

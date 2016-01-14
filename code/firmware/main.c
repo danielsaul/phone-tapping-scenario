@@ -92,11 +92,31 @@ int main(void){
 
     P1OUT |= BIT0; // P1.0 High - Start of 8kHz loop
 
-    n++; // Increment sample counter
 
     ADC10CTL0 |= ADC10SC; // Trigger ADC Conversion
     while( ADC10CTL1 & ADC10BUSY ) ;
-    long adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
+    int adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
+
+    if(!newtone){
+      if(adcvalue > signal_lower_threshold && adcvalue < signal_upper_threshold){
+        if(cnt > reset_cnt){
+          m = 0;
+        }else{
+          cnt++;
+        }
+      }else{
+        if(cnt > 3){
+          newtone = true;
+        }
+        cnt = 0;
+      }
+    }
+
+    if(!newtone){
+      continue;
+    }
+
+    n++; // Increment sample counter
 
     update_goertzel(adcvalue);
 
@@ -105,7 +125,7 @@ int main(void){
 
       bool aboveThreshold = calculate_goertzel_magnitudes(); // Calculate magnitudes
 
-      if(aboveThreshold && waiting){ // Must be both a row and col above the threshold, and be waiting for a tone
+      if(aboveThreshold /*&& waiting*/){ // Must be both a row and col above the threshold, and be waiting for a tone
 
         int col = determineCol();
         int row = determineRow();
@@ -118,7 +138,7 @@ int main(void){
         if(m > 10){
           m = 0;
         }
-
+        newtone = false;
         waiting = false;
       }
 
@@ -209,7 +229,7 @@ bool calculate_goertzel_magnitudes(void){
 
 }
 
-void update_goertzel(long val){
+void update_goertzel(int val){
 
   //Rows
   for(i=0; i<4; i++){
