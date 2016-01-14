@@ -1,0 +1,45 @@
+function [toneChoice]= DTMFdecoder(hi)
+a1=hi(1,29);
+a2=hi(1,32);
+a3=hi(1,35);
+a4=hi(1,39);
+a5=hi(1,50);
+a6=hi(1,55);
+a7=hi(1,60);
+thr=10;
+if (a1>thr)&&(a5>thr)
+  toneChoice=1;
+end
+if(a1>thr)&&(a6>thr)
+  toneChoice=2;
+end
+if(a1>thr)&&(a7>thr)
+  toneChoice=3;
+end
+if(a2>thr)&&(a5>thr)
+  toneChoice=4;
+end
+if(a2>thr)&&(a6>thr)
+  toneChoice=5;
+end
+if(a2>thr)&&(a7>thr)
+  toneChoice=6;
+end
+if(a3>thr)&&(a5>thr)
+  toneChoice=7;
+end
+if(a3>thr)&&(a6>thr)
+  toneChoice=8;
+end
+if(a3>thr)&&(a7>thr)
+  toneChoice=9;
+end
+if(a4>thr)&&(a5>thr)
+  toneChoice=10;
+end
+if(a4>thr)&&(a6>thr)
+  toneChoice=11;
+end
+if(a4>thr)&&(a7>thr)
+  toneChoice=12;
+end
