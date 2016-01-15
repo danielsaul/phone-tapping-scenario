@@ -27,28 +27,28 @@ char i = 0;
 volatile char flag = 0;
 
 int buf[3] = {178,178,178};
-int cnt = 0;
+volatile int cnt = 0;
 static const reset_cnt = 4000; // 1 second
-static const int signal_lower_threshold = 50;
-static const int signal_upper_threshold = 200;
-bool newtone = false;
-bool start = true;
+static const int signal_lower_threshold = 83;
+static const int signal_upper_threshold = 173;
+volatile bool newtone = false;
+volatile bool start = true;
 
 
-int n = 0;
-static const int NUM = 160;
+volatile int n = 0;
+static const int NUM = 205;
 
 static const long rows[4] = {697, 770, 852, 941};
 static const long cols[3] = {1209, 1336, 1477};
 
-static long row_coeffs[4];
-static long col_coeffs[3];
+volatile long row_coeffs[4];
+volatile long col_coeffs[3];
 
-int Qr[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
-int Qc[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
+volatile int Qr[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+volatile int Qc[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
 
-long magr[4];
-long magc[4];
+volatile long magr[4];
+volatile long magc[4];
 
 static const long threshold = 20000;
 

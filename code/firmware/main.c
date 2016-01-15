@@ -107,30 +107,17 @@ int main(void){
     while( ADC10CTL1 & ADC10BUSY ) ;
     int adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
 
-    buf[2] = buf[1];
-    buf[1] = buf[0];
-    buf[0] = adcvalue;
-    int adcavg = (buf[0]+buf[1]+buf[2])/3;
-
 
     // Requires 3 samples of no signal before capturing next tone
     if(!newtone){
-      if(adcavg > signal_lower_threshold && adcavg < signal_upper_threshold){
-        if(cnt > reset_cnt){
-          m = 0;
-        }else{
-          cnt++;
-        }
+      if(adcvalue > signal_lower_threshold && adcvalue < signal_upper_threshold){
+        cnt++;
       }else{
-        if(cnt > 50){
-            newtone = true;
-            if(start){
-              if(cnt < reset_cnt){
-                newtone = false;
-              }else{
-                start = false;
-              }
-            }
+        if(cnt > 20){
+          newtone = true;
+        }
+        if(cnt > 400){
+          m = 0;
         }
         cnt = 0;
       }
@@ -140,17 +127,17 @@ int main(void){
 
       P1OUT |= BIT0; // P1.0 High - Start of 8kHz loop
 
-      n++; // Increment sample counter
-
       update_goertzel(adcvalue);
 
-      if(n >= NUM){ // If enough samples
+      n++; // Increment sample counter
+
+      if(n == NUM){ // If enough samples
         n=0; // Reset sample counter
 
         char a = calculate_goertzel_magnitudes(); // Calculate magnitudes
 
 
-        //if(a){ // Must be both a row and col above the threshold, and be waiting for a tone
+        if(a){ // Must be both a row and col above the threshold, and be waiting for a tone
 
           int col = determineCol();
           int row = determineRow();
@@ -167,7 +154,7 @@ int main(void){
             LCDWriteString(number);
           }
 
-        //}
+        }
 
         newtone = false;
 
@@ -214,11 +201,8 @@ char calculate_goertzel_magnitudes(void){
 
   //Magnitude Rows
   for(i=0; i<4; i++){
-    Qr[i][1] = (Qr[i][1]);
-    Qr[i][2] = (Qr[i][2]);
 
-    //long x = (long)row_coeffs[i] * (long)Qr[i][1] * (long)Qr[i][2];
-    magr[i] = (((int)Qr[i][1] * (int)Qr[i][1]) + ((int)Qr[i][2] * (int)Qr[i][2]) - ((long)row_coeffs[i] * (long)Qr[i][1] * (long)Qr[i][2]));
+    magr[i] = (((long)Qr[i][1] * (long)Qr[i][1]) + ((long)Qr[i][2] * (long)Qr[i][2]) - (((long)row_coeffs[i] * (long)Qr[i][1] * (long)Qr[i][2])/256));
 
     Qr[i][1] = 0;
     Qr[i][2] = 0;
@@ -243,11 +227,8 @@ char calculate_goertzel_magnitudes(void){
 
   //Magnitude Cols
   for(i=0; i<3; i++){
-    Qc[i][1] = Qc[i][1];
-    Qc[i][2] = Qc[i][2];
 
-    //long x = ;
-    magc[i] = (((int)Qc[i][1] * (int)Qc[i][1]) + ((int)Qc[i][2] * (int)Qc[i][2]) - ((long)col_coeffs[i] * (long)Qc[i][1] * (long)Qc[i][2]));
+    magc[i] = (((long)Qc[i][1] * (long)Qc[i][1]) + ((long)Qc[i][2] * (long)Qc[i][2]) - (((long)col_coeffs[i] * (long)Qc[i][1] * (long)Qc[i][2])/256));
 
     Qc[i][1] = 0;
     Qc[i][2] = 0;
