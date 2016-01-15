@@ -2,13 +2,16 @@ int value = 0;
 volatile char flag = 0;
 
 void setup() {
-  Serial.begin(19200); 
+  Serial.begin(9600); 
   analogReference(INTERNAL1V5);
+    
+  Serial.println("setup");   
   
   TACCTL0 |= CCIE;
   TACCR0 = 250-1;	// 8kHz (16MHz/82/8kHz)
   TACTL |= TASSEL_2 + ID_3; // SMCLK & clk/8
   TACTL |= MC_1;	//Use UP mode timer
+
   
 }
 

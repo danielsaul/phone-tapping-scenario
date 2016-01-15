@@ -2,14 +2,14 @@ import serial
 from twilio.rest import TwilioRestClient
 from dtmf import dtmf_decoder
 
-account_sid = "ACXXXXXXXXXXXXXXXXX"
-auth_token = "YYYYYYYYYYYYYYYYYY"
-client = TwilioRestClient(account_sid, auth_token)
+#account_sid = "ACXXXXXXXXXXXXXXXXX"
+#auth_token = "YYYYYYYYYYYYYYYYYY"
+#client = TwilioRestClient(account_sid, auth_token)
 
-ser = serial.Serial('/dev/ttyUSB0',19200,timeout=2)
+ser = serial.Serial('/dev/tty.usbmodem1421',921600,timeout=2)
 
-N = 150
-sample_rate = 8000
+N = 140
+sample_rate = 4000
 threshold = 1000000
 sample_max = 1024
 sample_threshold = 180
@@ -24,18 +24,24 @@ cnt = 0
 newTone = False
 number = ""
 
+
 while(1):
 
     s = ser.readline()
-    x = int(s)
+
+    try:
+        x = int(s)
+    except ValueError:
+        continue
 
     if not newTone:
 
         if lower < x < upper:
             cnt += 1
         else:
-            if cnt > 20:
+            if cnt > 10:
                 newTone = True
+
             if cnt > 400:
                 number = ""
             cnt = 0
@@ -54,7 +60,5 @@ while(1):
     if len(number) == 11:
         print number
         numbercc = "+44"+number[1:]
-        call = client.calls.create(to=numbercc,  # Any phone number
-                                   from_="+441202835206", # Must be a valid Twilio number
-                                   url="http://dansaul.co.uk/twilio.xml")
-        print call.sid
+#        call = client.calls.create(to=numbercc, from_="+441202835206", url="http://dansaul.co.uk/twilio.xml")
+        #print call.sid
