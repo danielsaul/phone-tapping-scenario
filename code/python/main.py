@@ -1,7 +1,7 @@
 import serial
 from dtmf import dtmf_decoder
 
-ser = serial.Serial('/dev/ttyUSB0',76800,timeout=2)
+ser = serial.Serial('/dev/ttyUSB0',19200,timeout=2)
 
 N = 150
 sample_rate = 8000
