@@ -7,13 +7,14 @@
  * main.c
  *
  */
+
 #include <msp430g2553.h>
 #include <math.h>
 #include <stdbool.h>
 #include "main.h"
 #include "LCDDisplay.h"
 
-// 8kHz Loop
+// Timing Loop
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A(void)
 {
@@ -21,15 +22,13 @@ __interrupt void Timer_A(void)
   return;
 }
 
-
 int main(void){
 
   WDTCTL = WDTPW + WDTHOLD;
   BCSCTL1 = CALBC1_16MHZ;
   DCOCTL = CALDCO_16MHZ;
 
-
-  // P1.0 8kHz loop pulse
+  // P1.0 timing loop pulse
   P1DIR |= BIT0;
   P1OUT &= ~BIT0;
 
@@ -40,13 +39,9 @@ int main(void){
   LCDCursorOff();
   LCDBlinkOff();
   LCDClear();
-  // Display configuring message
-  /*LCDHome();
 
-  LCDWriteString("Configuring...");
-*/
   // ADC Config
-  ADC10CTL0 = SREF_1 | ADC10SHT_0 | REFON | ADC10ON; // 1.5V ref
+  ADC10CTL0 = SREF_0 | ADC10SHT_0 | ADC10ON; // 3.3V ref
   ADC10CTL1 = INCH_4 | ADC10DIV_0; // ADC channel 4,
   ADC10AE0 = BIT4; // P1.4
   ADC10CTL0 |= ENC;
@@ -56,64 +51,40 @@ int main(void){
     int k = (int)(0.5 + ((NUM*rows[i])/fs));
     long x = (long)(256 * (2 * cos((2*PI*k)/NUM)));
     row_coeffs[i] = x;
-
-    /*LCDClear();
-    LCDHome();
-    char c[16];
-    sprintf(c, "%u", x);
-    LCDWriteString(c);
-    __delay_cycles(10000000);*/
-
   }
   for(i=0; i<3; i++){     // Cols
     int k = (int)(0.5 + ((NUM*cols[i])/fs));
     long x = (long)(256 * (2 * cos((2*PI*k)/NUM)));
     col_coeffs[i] = x;
-
-    /*LCDClear();
-    LCDHome();
-    char c[16];
-    sprintf(c, "%u", x);
-    LCDWriteString(c);
-    __delay_cycles(10000000);*/
-
   }
 
-  // Display waiting message
-/*  LCDClear();
-  LCDHome();
-  LCDWriteString("Waiting for");
-  LCDSetLocation(1,0);
-  LCDWriteString("number...");
-*/
   // Timer A Config
   TACCTL0 |= CCIE;
-  TACCR0 = 250-1;	// 8kHz (16MHz/82/8kHz)
+  TACCR0 = 500-1;	// 4kHz
   TACTL |= TASSEL_2 + ID_3; // SMCLK & clk/8
   TACTL |= MC_1;	//Use UP mode timer
 
 
   while(1){
 
-    // Flag is enabled at 8kHz
+    // Flag is enabled at sampling rate
     if(!flag){
       continue;
     }
     flag = 0;
 
 
-
     ADC10CTL0 |= ADC10SC; // Trigger ADC Conversion
     while( ADC10CTL1 & ADC10BUSY ) ;
     int adcvalue = (long)ADC10MEM / 4; // Divide into 8bit
 
-
-    // Requires 3 samples of no signal before capturing next tone
+    // Requires x samples of no signal before capturing next tone
+    // 400 samples of no signal means new phone number entirely
     if(!newtone){
       if(adcvalue > signal_lower_threshold && adcvalue < signal_upper_threshold){
         cnt++;
       }else{
-        if(cnt > 20){
+        if(cnt > 10){
           newtone = true;
         }
         if(cnt > 400){
@@ -136,8 +107,7 @@ int main(void){
 
         char a = calculate_goertzel_magnitudes(); // Calculate magnitudes
 
-
-        if(a){ // Must be both a row and col above the threshold, and be waiting for a tone
+        if(a){ // Must be both a row and col above the threshold
 
           int col = determineCol();
           int row = determineRow();
@@ -147,11 +117,12 @@ int main(void){
 
           m++;
           if(m > 10){
+            // Entire phone number decoded, write to LCD
             m = 0;
-            start = true;
             LCDClear();
             LCDHome();
             LCDWriteString(number);
+
           }
 
         }
@@ -164,7 +135,6 @@ int main(void){
 
     P1OUT &= ~BIT0; // P1.0 Low - End of 8kHz loop
   }
-
 
 }
 
@@ -211,12 +181,6 @@ char calculate_goertzel_magnitudes(void){
       aboveThreshold = 1;
     }
 
-    /*LCDClear();
-    LCDHome();
-    char c[16];
-    sprintf(c, "%d: %d %d", i, aboveThreshold, magr[i]);
-    LCDWriteString(c);
-    __delay_cycles(10000000);*/
   }
 
   if(!aboveThreshold){
