@@ -2,8 +2,8 @@ import serial
 from twilio.rest import TwilioRestClient
 from dtmf import dtmf_decoder
 
-#account_sid = "ACXXXXXXXXXXXXXXXXX"
-#auth_token = "YYYYYYYYYYYYYYYYYY"
+#account_sid = ""
+#auth_token = ""
 #client = TwilioRestClient(account_sid, auth_token)
 
 ser = serial.Serial('/dev/tty.usbmodem1421',921600,timeout=2)
@@ -59,6 +59,7 @@ while(1):
 
     if len(number) == 11:
         print number
-        numbercc = "+44"+number[1:]
-#        call = client.calls.create(to=numbercc, from_="+441202835206", url="http://dansaul.co.uk/twilio.xml")
+        #numbercc = "+44"+number[1:]
+        #call = client.calls.create(to=numbercc, from_="+441202835206", url="http://dansaul.co.uk/twilio.xml", method="GET")
+        #msg = client.messages.create(to=numbercc, from_="+441202835206", body="With love from Team 3 <3")
         #print call.sid
