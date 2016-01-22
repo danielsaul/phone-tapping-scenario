@@ -29,10 +29,10 @@ Once the Goertzel algorithm has returned a magnitude for each frequency after N 
 
 | | 1209Hz | 1336Hz | 1477Hz |
 |:---|:---:|:---:|:---:|
-| *697Hz* | 1 | 2 | 3 |
-| *770Hz* | 4 | 5 | 6 |
-| *852Hz* | 7 | 8 | 9 |
-| *941Hz* | * | 0 | # |
+| **697Hz** | 1 | 2 | 3 |
+| **770Hz** | 4 | 5 | 6 |
+| **852Hz** | 7 | 8 | 9 |
+| **941Hz** | * | 0 | # |
 
 The C version is written to be run on an isolated MSP430 with the decoded number displayed on an LCD. A timer is configured to trigger an interrupt at a specific interval to get a certain sampling frequency, 4kHz was found to be high enough to be able to detect our highest frequencies without any issues whilst leaving enough time between samples for processing. The 10bit ADC is triggered at this sample rate and then the resolution of the result reduced to 8bit to reduce the processing time required.
 
