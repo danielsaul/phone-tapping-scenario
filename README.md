@@ -11,6 +11,7 @@ The signal is picked up by coiling a wire around a length of the telephone cable
 
 ## Analogue Section
 The signal acquired from the phone line will have the required DTMF tones lying in the frequency range 697Hz - 1477Hz. The signal could also contain ADSL which will be >25kHz and the rudimentary antenna will likely pick up a lot of noise. Therefore the analogue section consists of several stages:
+
 1. Simple buffer stage for impedance matching
 2. 4th Order High Pass Filter - removes low frequency noise, particularly 50Hz
 3. 4th Order Low Pass Filter - removes high frequencies, particularly ADSL
