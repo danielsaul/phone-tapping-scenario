@@ -25,11 +25,13 @@ Multisim circuits for the above can be found in the relevant directory.
 Both versions of the digital section are based on the same principles. The signal is passed into an ADC and processed in real-time at a certain sample rate, using the Goertzel Algorithm configured to find the the DTMF frequencies: [697Hz, 770Hz, 852Hz, 941Hz] and [1209Hz, 1336Hz, 1477Hz]. The Goertzel algorithm allows us to detect tones more efficiently, with far less horsepower than the Fast Fourier Transform for example. The theory behind the algorithm can be easily found through a search and so it won't be repeated here, but it is essentially a series of bandpass infinite impulse response (IIR) filters at the relevant frequencies.
 
 Once the Goertzel algorithm has returned a magnitude for each frequency after N samples, they are compared against a threshold value to determine if the frequencies are present. The most likely frequency, with the highest magnitude, for each group is taken and then the relevant digit looked up and saved:
+
 | | 1209Hz | 1336Hz | 1477Hz |
-| 697Hz | 1 | 2 | 3 |
-| 770Hz | 4 | 5 | 6 |
-| 852Hz | 7 | 8 | 9 |
-| 941Hz | * | 0 | # |
+|:---|:---:|:---:|:---:|
+| *697Hz* | 1 | 2 | 3 |
+| *770Hz* | 4 | 5 | 6 |
+| *852Hz* | 7 | 8 | 9 |
+| *941Hz* | * | 0 | # |
 
 The C version is written to be run on an isolated MSP430 with the decoded number displayed on an LCD. A timer is configured to trigger an interrupt at a specific interval to get a certain sampling frequency, 4kHz was found to be high enough to be able to detect our highest frequencies without any issues whilst leaving enough time between samples for processing. The 10bit ADC is triggered at this sample rate and then the resolution of the result reduced to 8bit to reduce the processing time required.
 
